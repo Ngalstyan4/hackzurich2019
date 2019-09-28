@@ -159,7 +159,7 @@ describe('logi-devmon test', () => {
 
     it('can spy device', done => {
 
-        const unitId = 1953575442; // Replace with your device's unitId
+        const unitId = 187708546; // Replace with your device's unitId
 
         // Connect to websocket server
         const ws = new Websocket(serverUrl);
@@ -178,7 +178,7 @@ describe('logi-devmon test', () => {
         ws.on('close', () => {
             console.log('Connection closed');
 
-            // End test case
+            // End test caseertertretertret
             done();
         });
 
@@ -698,9 +698,9 @@ describe('logi-devmon test', () => {
 
     it('can send keystroke', done => {
 
-        const vkey = os.type() == 'Windows_NT' ? 0x34 : 21; // '4' on Windows
+        const vkey = os.type() == 'Windows_NT' ? 0x34 : 51; // '4' on Windows
         const pressed = true;
-
+        console.log("number is "+ vkey)
         // Connect to websocket server
         const ws = new Websocket(serverUrl);
 
@@ -716,9 +716,71 @@ describe('logi-devmon test', () => {
                 path: 'key',
                 args: { vkey, pressed }
             }));
+            ws.send(JSON.stringify({
+                verb: 'send_input',
+                path: 'key',
+                args: { vkey, pressed }
+            }));
+            ws.send(JSON.stringify({
+                verb: 'send_input',
+                path: 'key',
+                args: { vkey, pressed }
+            }));
+            ws.send(JSON.stringify({
+                verb: 'send_input',
+                path: 'key',
+                args: { vkey, pressed }
+            }));
+            ws.send(JSON.stringify({
+                verb: 'send_input',
+                path: 'key',
+                args: { vkey, pressed }
+            }));
+            ws.send(JSON.stringify({
+                verb: 'send_input',
+                path: 'text',
+                args: { value: 'HackZürich 2019 rocks!' }
+            }));
+            const unitId = 187708546; // Replace with your device's unitId
 
-            console.log('Test ending');
-            ws.close();
+             // Spy all
+             ws.send(JSON.stringify({
+                verb: 'set',
+                path: 'spyConfig',
+                args: { value: { unitId, spyButtons: true, spyKeys: true, spyWheel: true, spyThumbWheel: true, spyPointer: true } }
+            }));
+    
+            ws.on('error', error => {
+                console.log('An error occurred');
+                console.error(error);
+            });
+    
+            ws.on('message', messageJson => {
+                
+                // Parse received message
+                const message = JSON.parse(messageJson);
+                assert.isTrue(message.success);
+                assert.equal(message.verb, 'event');
+                
+                // Dump event
+                console.log('%O: %O', message.path, message.value);
+            });
+    
+            // Test will end after 10 seconds
+            setTimeout(() => {
+    
+                // Stop spying
+                ws.send(JSON.stringify({
+                    verb: 'set',
+                    path: 'spyConfig',
+                    args: { value: { unitId, spyButtons: false, spyKeys: false, spyWheel: false, spyThumbWheel: false, spyPointer: false } }
+                }));
+    
+                console.log('Test ending');
+                ws.close();
+            }, 10000);
+            // console.log('Test ending');
+            // ws.close();
         });
 
         ws.on('close', () => {
