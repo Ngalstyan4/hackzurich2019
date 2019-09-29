@@ -5,7 +5,7 @@ let SOFT_DEL = false;
 let MiddleWare = class {
     constructor(ws) {
         this.ws = ws;
-        this.PRIME = 37;
+        this.PRIME = 677;
         this.ALPHABETS = [
             "1234567890-=qwertyuiop[]asdfghjkl;'zxcvbnm,.",
             "1234567890-=йцукенгшщзхъфывапролджэячсмитьбю",
@@ -23,17 +23,26 @@ let MiddleWare = class {
             .readFileSync('100000-english-mit.txt').toString().split("\n").filter(l => l.length > 4)
             .map(w => w.split("")
                 .map(c => this.CODE[this.ALPHABETS[0].indexOf(c)]));
+        let ARMENIAN = fs
+                .readFileSync('wordshy.txt').toString().split("\n").filter(l => l.length > 4)
+                .map(w => w.split("")
+                .map(c => this.CODE[this.ALPHABETS[2].indexOf(c)]));
+        
         let RUSSIAN_DICT = {};
         let ENGLISH_DICT = {};
+        let ARMENIAN_DICT = {};
 
         for (let i in RUSSIAN) {
-            RUSSIAN_DICT[RUSSIAN[i].reduce((acc, el) => acc + this.PRIME * el)] = RUSSIAN[i];
+            RUSSIAN_DICT[RUSSIAN[i].reduce((acc, el) => acc +"#"+ el)] = RUSSIAN[i];
         }
         for (let i in ENGLISH) {
-            ENGLISH_DICT[ENGLISH[i].reduce((acc, el) => acc + this.PRIME * el)] = ENGLISH[i];
+            ENGLISH_DICT[ENGLISH[i].reduce((acc, el) => acc +"#"+ el)] = ENGLISH[i];
+        }
+        for (let i in ARMENIAN) {
+            ARMENIAN_DICT[ARMENIAN[i].reduce((acc, el) => {acc +"#"+ el})] = ARMENIAN[i];
         }
 
-        this.DICTS = [ENGLISH_DICT, RUSSIAN_DICT];
+        this.DICTS = [ENGLISH_DICT, RUSSIAN_DICT, ARMENIAN_DICT];
 
     }
 
@@ -78,12 +87,13 @@ let MiddleWare = class {
     // HELPERS BEGIN *****************************************
     wordInLang(word, lang) {
         if (word.length == 0) return null;
-        return lang[word.reduce((acc, el) => acc + this.PRIME * el)];
+        return lang[word.reduce((acc, el) => acc +"#"+ el)];
     }
     // HELPERS END *****************************************
 
 
     handleMessage(messageJson) {
+        console.log(this.wordInLang(this.word, this.DICTS[2]))
         // Parse received message
         const message = JSON.parse(messageJson);
         assert.isTrue(message.success);
@@ -100,11 +110,14 @@ let MiddleWare = class {
         } else if (message.value.vkey == 49) { // space aka new word
             if (this.word.length == 0) return;
             for (let lang in this.DICTS) {
+                console.log("lang lang", lang, this.DICTS[lang]["18#28#34#40"])
 
                 if (this.wordInLang(this.word, this.DICTS[lang])) {
-                    let word = this.word;
+                    console.log("դօնե դօնե", lang, this.DICTS[lang]["18#28#34#40"])
+
+                    let word = this.wordInLang(this.word, this.DICTS[lang]);
                     App.delWord();
-                    console.log(word.map(code => this.ALPHABETS[0][this.CODE.indexOf(code)]));
+                    console.log(lang, word.map(code => this.ALPHABETS[lang][this.CODE.indexOf(code)]));
 
                     ws.send(JSON.stringify({
                         verb: 'send_input',
@@ -122,7 +135,7 @@ let MiddleWare = class {
 
         } else {
             this.word.push(message.value.vkey);
-            if (this.CODE.indexOf(message.value.vkey) != -1) {
+            if (this.CODE.indexOf(message.value.vkey) != -1) { 
                 if (this.current_layout == 0) return; // latin
                 // App.delCharSoft();
                 // console.log("he yooo", this.word)
